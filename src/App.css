@@ -1,0 +1,94 @@
+/* App specific styles */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f9fafb;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sidebar animations */
+.sidebar-enter {
+  transform: translateX(-100%);
+}
+
+.sidebar-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-in-out;
+}
+
+.sidebar-exit {
+  transform: translateX(0);
+}
+
+.sidebar-exit-active {
+  transform: translateX(-100%);
+  transition: transform 300ms ease-in-out;
+}
+
+/* Search bar styles */
+.search-container {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 400;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Panel shadows */
+.panel-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.panel-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Map overlays */
+.map-overlay {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.map-overlay-top-left {
+  top: 1rem;
+  left: 1rem;
+}
+
+.map-overlay-top-right {
+  top: 1rem;
+  right: 1rem;
+}
+
+.map-overlay-bottom-left {
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.map-overlay-bottom-right {
+  bottom: 1rem;
+  right: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-container {
+    max-width: calc(100% - 2rem);
+  }
+  
+  .sidebar {
+    position: absolute;
+    z-index: 500;
+    height: 100%;
+  }
+}
