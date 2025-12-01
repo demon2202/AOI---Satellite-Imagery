@@ -2,6 +2,7 @@
 
 A modern, interactive web application for creating and managing Areas of Interest (AOI) on satellite imagery. Built with React, TypeScript, Vite, and Leaflet.
 
+![AOI Creation App](https://via.placeholder.com/800x400?text=AOI+Creation+App)
 
 ## 🚀 Quick Start
 
@@ -363,6 +364,7 @@ interface AOIFeature {
   ]
 }
 ```
-#   A O I - - - S a t e l l i t e - I m a g e r y  
- #   A O I - - - S a t e l l i t e - I m a g e r y  
- 
+
+## 📄 License
+
+MIT
