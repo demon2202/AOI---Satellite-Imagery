@@ -366,7 +366,5 @@ interface AOIFeature {
 }
 ```
 
-## 📄 License
 
-MIT
 
