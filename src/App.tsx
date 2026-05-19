@@ -158,8 +158,11 @@ export default function App() {
   const [showNotifs, setShowNotifs]     = useState(false)
   const [showProfile, setShowProfile]   = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-    try { return JSON.parse(localStorage.getItem('notifs')||'null') } catch { return null }
-    ?? [
+    try {
+      const saved = JSON.parse(localStorage.getItem('notifs') || 'null')
+      if (Array.isArray(saved)) return saved
+    } catch { /* ignore */ }
+    return [
       { id:'1', title:'Welcome', message:'Draw an AOI on the map to get started.', read:false, timestamp:new Date().toISOString() },
       { id:'2', title:'Tip', message:'Use the search bar to fly to any location.', read:false, timestamp:new Date().toISOString() },
     ]
