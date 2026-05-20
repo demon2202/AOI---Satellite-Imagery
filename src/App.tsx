@@ -10,10 +10,10 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow })
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────
 type FeatureType = 'polygon' | 'rectangle' | 'circle' | 'marker'
 type ToastType   = 'success' | 'error' | 'info' | 'warning'
-type ViewType    = 'map' | 'analytics' | 'settings'
+export type ViewType    = 'map' | 'analytics' | 'settings'
 
 interface AOIFeature {
   id: string
@@ -32,12 +32,11 @@ interface AppNotification {
   timestamp: string
 }
 interface Toast {
-  id: string
   message: string
   type: ToastType
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────
 const DEFAULT_CENTER: [number, number] = [20.5937, 78.9629]
 const DEFAULT_ZOOM = 5
 const FEATURE_COLORS: Record<FeatureType, string> = {
@@ -51,7 +50,7 @@ const DEFAULT_NOTIFICATIONS: AppNotification[] = [
   { id: '2', title: 'Tip', message: 'Use the search bar to fly to any location.', read: false, timestamp: new Date().toISOString() },
 ]
 
-// ─── Utils ────────────────────────────────────────────────────────────────────
+// ─── Utils ────────────────────────────────────────────────────────────────
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2)
 }
@@ -83,7 +82,7 @@ function loadLS<T>(key: string, fallback: T): T {
   return fallback
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -119,13 +118,13 @@ function AOIItem({ feature, index, onRemove, onZoom }: AOIItemProps) {
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-          </svg>
+            </svg>
         </button>
         <button className="aoi-act-btn del" onClick={onRemove} title="Delete">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+            </svg>
         </button>
       </div>
     </div>
@@ -170,7 +169,7 @@ function StatCard({ label, value, color, emoji }: StatCardProps) {
   )
 }
 
-// ─── Main App ─────────────────────────────────────────────────────────────────
+// ─── Main App ───────────────────────────────────────────────────────────
 export default function App() {
   const [features, setFeatures]           = useState<AOIFeature[]>(() => loadLS('aoi-features', []))
   const [activeView, setActiveView]       = useState<ViewType>('map')
@@ -203,16 +202,15 @@ export default function App() {
   useEffect(() => { localStorage.setItem('notifs', JSON.stringify(notifications)) }, [notifications])
 
   const toast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = uid()
-    setToasts(p => [...p, { id, message, type }])
-    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3200)
+    setToasts(p => [...p, { message, type }])
+    setTimeout(() => setToasts(p => p.slice(1)), 3200)
   }, [])
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts(p => p.filter(t => t.id !== id))
+  const dismissToast = useCallback((index: number) => {
+    setToasts(p => p.filter((_, i) => i !== index))
   }, [])
 
-  // ── Map init ────────────────────────────────────────────────────────────────
+  // ── Map init ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapContRef.current || mapRef.current || activeView !== 'map') return
 
@@ -247,15 +245,15 @@ export default function App() {
       let area = 0
 
       if (type === 'polygon' || type === 'rectangle') {
-        const pts = (layer as L.Polygon).getLatLngs()[0] as L.LatLng[]
+        const pts = (layer as unknown as L.Polygon).getLatLngs()[0] as L.LatLng[]
         featureCoords = pts.map(ll => [ll.lat, ll.lng])
         area = polyArea(pts)
       } else if (type === 'circle') {
-        const c = layer as L.Circle
+        const c = layer as unknown as L.Circle
         featureCoords = { center: [c.getLatLng().lat, c.getLatLng().lng], radius: c.getRadius() }
         area = Math.PI * c.getRadius() ** 2
       } else {
-        const m = layer as L.Marker
+        const m = layer as unknown as L.Marker
         featureCoords = [m.getLatLng().lat, m.getLatLng().lng]
       }
 
@@ -290,7 +288,7 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView])
 
-  // ── Restore drawn layers ────────────────────────────────────────────────────
+  // ── Restore drawn layers ────────────────────────────────────────────────
   useEffect(() => {
     if (!drawnRef.current) return
     drawnRef.current.clearLayers()
@@ -310,7 +308,7 @@ export default function App() {
     })
   }, [features])
 
-  // ── Layer visibility & opacity ──────────────────────────────────────────────
+  // ── Layer visibility & opacity ────────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current; const tile = tileRef.current
     if (!map || !tile) return
@@ -329,7 +327,7 @@ export default function App() {
     tileRef.current?.setOpacity(wmsOpacity / 100)
   }, [wmsOpacity])
 
-  // ── Draw tool ───────────────────────────────────────────────────────────────
+  // ── Draw tool ───────────────────────────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -341,14 +339,14 @@ export default function App() {
     const m = map as unknown as L.DrawMap
     type DH = { enable: () => void; disable: () => void }
     let h: DH | null = null
-    if (activeTool === 'polygon')   h = new L.Draw.Polygon(m, opts)   as unknown as DH
-    if (activeTool === 'rectangle') h = new L.Draw.Rectangle(m, opts) as unknown as DH
-    if (activeTool === 'circle')    h = new L.Draw.Circle(m, opts)    as unknown as DH
-    if (activeTool === 'marker')    h = new L.Draw.Marker(m, {})      as unknown as DH
+    if (activeTool === 'polygon')   h = new (L.Draw.Polygon as unknown as new (m: L.DrawMap, opts: unknown) => DH)(m, opts)
+    if (activeTool === 'rectangle') h = new (L.Draw.Rectangle as unknown as new (m: L.DrawMap, opts: unknown) => DH)(m, opts)
+    if (activeTool === 'circle')    h = new (L.Draw.Circle as unknown as new (m: L.DrawMap, opts: unknown) => DH)(m, opts)
+    if (activeTool === 'marker')    h = new (L.Draw.Marker as unknown as new (m: L.DrawMap, opts: unknown) => DH)(m, {})
     if (h) { h.enable(); drawHandRef.current = h }
   }, [activeTool])
 
-  // ── Search ──────────────────────────────────────────────────────────────────
+  // ── Search ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (searchQ.length < 3) { setSearchRes([]); setShowSearch(false); return }
     const t = setTimeout(async () => {
@@ -362,7 +360,7 @@ export default function App() {
     return () => clearTimeout(t)
   }, [searchQ])
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────────────────
   const handleLocate = useCallback(() => {
     if (!navigator.geolocation) { toast('Geolocation not supported', 'error'); return }
     navigator.geolocation.getCurrentPosition(
@@ -454,13 +452,13 @@ export default function App() {
   const avgArea    = withArea.length > 0 ? totalArea / withArea.length : 0
 
   const tools: Array<{ id: FeatureType; label: string; path: string }> = [
-    { id: 'polygon',   label: 'Poly',   path: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z' },
+    { id: 'polygon',   label: 'Poly',   path: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0[...]' },
     { id: 'rectangle', label: 'Rect',   path: 'M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z' },
     { id: 'circle',    label: 'Circle', path: 'M12 12m-9 0a9 9 0 1018 0 9 9 0 00-18 0' },
     { id: 'marker',    label: 'Pin',    path: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z' },
   ]
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────
   return (
     <div className="app">
 
@@ -471,7 +469,7 @@ export default function App() {
             <div className="logo-mark">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-1[...]" />
               </svg>
             </div>
             <span className="logo-text">AOI<span>studio</span></span>
@@ -522,7 +520,7 @@ export default function App() {
           <button className="icon-btn" onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false) }}>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11[...]" />
             </svg>
             {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
           </button>
@@ -843,7 +841,7 @@ export default function App() {
                   <div className="notif-empty">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a[...]" />
                     </svg>
                     <p>All caught up</p>
                   </div>
@@ -873,8 +871,8 @@ export default function App() {
               <div className="profile-menu">
                 {([
                   { label: 'My Profile', path: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-                  { label: 'Settings',   path: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-                  { label: 'Help',       path: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                  { label: 'Settings',   path: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.[...]' },
+                  { label: 'Help',       path: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0[...]' },
                 ] as const).map(item => (
                   <button key={item.label} className="profile-item"
                     onClick={() => { toast(`${item.label} coming soon`, 'info'); setShowProfile(false) }}>
@@ -901,13 +899,13 @@ export default function App() {
 
       {/* ── TOASTS ── */}
       <div className="toast-stack">
-        {toasts.map(t => (
-          <div key={t.id} className={`toast ${t.type}`} onClick={() => dismissToast(t.id)}>
+        {toasts.map((t, i) => (
+          <div key={i} className={`toast ${t.type}`} onClick={() => dismissToast(i)}>
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {t.type === 'success' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />}
               {t.type === 'error'   && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />}
               {t.type === 'info'    && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
-              {t.type === 'warning' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />}
+              {t.type === 'warning' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1[...]" />}
             </svg>
             {t.message}
           </div>
