@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
-import type { Feature } from '../types';
+import type { AOIFeature } from '../types/index';
 
 interface MapStore {
   center: [number, number];
@@ -10,15 +10,15 @@ interface MapStore {
     drawing: boolean;
     features: boolean;
   };
-  features: Feature[];
-  selectedFeature: Feature | null;
+  features: AOIFeature[];
+  selectedFeature: AOIFeature | null;
   setCenter: (center: [number, number]) => void;
   setZoom: (zoom: number) => void;
   toggleLayer: (layer: keyof MapStore['layers']) => void;
-  addFeature: (feature: Feature) => void;
+  addFeature: (feature: AOIFeature) => void;
   removeFeature: (id: string) => void;
-  updateFeature: (id: string, feature: Partial<Feature>) => void;
-  setSelectedFeature: (feature: Feature | null) => void;
+  updateFeature: (id: string, feature: Partial<AOIFeature>) => void;
+  setSelectedFeature: (feature: AOIFeature | null) => void;
   clearFeatures: () => void;
 }
 
@@ -26,8 +26,8 @@ export const useMapStore = create<MapStore>()(
   devtools(
     persist(
       (set) => ({
-        center: [51.5074, 7.4912],
-        zoom: 10,
+        center: [20.5937, 78.9629],
+        zoom: 5,
         layers: {
           wms: true,
           drawing: false,
