@@ -1,6 +1,9 @@
 import type L from 'leaflet'
 
-// Feature types for AOI
+// ─── View Types ────────────────────────────────────────────────────────────
+export type ViewType = 'map' | 'analytics' | 'settings'
+
+// ─── Feature Types ─────────────────────────────────────────────────────────
 export type FeatureType = 'polygon' | 'rectangle' | 'circle' | 'marker'
 
 export interface AOIFeature {
@@ -13,14 +16,13 @@ export interface AOIFeature {
   createdAt: string
 }
 
-// Toast notification types
+// ─── Toast / Notification ─────────────────────────────────────────────────
 export interface ToastMessage {
   id: string
   message: string
   type: 'success' | 'error' | 'info' | 'warning'
 }
 
-// Notification type
 export interface Notification {
   id: string
   title: string
@@ -29,7 +31,7 @@ export interface Notification {
   timestamp: string
 }
 
-// Application state
+// ─── Application State ────────────────────────────────────────────────────
 export interface AppState {
   features: AOIFeature[]
   activeTool: string | null
@@ -39,7 +41,7 @@ export interface AppState {
   mapRef: L.Map | null
 }
 
-// Search result from Nominatim
+// ─── Search ───────────────────────────────────────────────────────────────
 export interface SearchResult {
   place_id: number
   lat: string
@@ -48,51 +50,7 @@ export interface SearchResult {
   type: string
 }
 
-// Map configuration
-export interface MapConfig {
-  center: [number, number]
-  zoom: number
-  wmsUrl: string
-  wmsLayer: string
-}
-
-// Drawing tool config
-export interface DrawingTool {
-  id: string
-  name: string
-  icon: React.ReactNode
-  type: FeatureType
-}
-
-// Layer info
-export interface LayerInfo {
-  id: string
-  name: string
-  description: string
-  visible: boolean
-  opacity?: number
-}
-
-// Coordinates display
-export interface Coordinates {
-  lat: number
-  lng: number
-}
-
-// Map event types for better type safety
-export interface MapMouseEvent {
-  latlng: L.LatLng
-  containerPoint: L.Point
-  layerPoint: L.Point
-  originalEvent: MouseEvent
-}
-
-// Feature layer with ID tracking
-export interface FeatureLayer extends L.Layer {
-  featureId?: string
-}
-
-// Props interfaces for components
+// ─── Component Props ──────────────────────────────────────────────────────
 export interface SidebarProps {
   features: AOIFeature[]
   activeTool: string | null
@@ -156,3 +114,13 @@ export interface AOIListProps {
   onExport: () => void
   mapRef: L.Map | null
 }
+
+export interface DrawingTool {
+  id: string
+  name: string
+  icon: React.ReactNode
+  type: FeatureType
+}
+
+// Convenience alias so mapStore can keep its existing structure
+export type { AOIFeature as Feature }
